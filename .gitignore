@@ -62,3 +62,4 @@ typings/
 
 # block bot token
 config/config.json
+config/token.json
