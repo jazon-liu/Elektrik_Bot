@@ -18,10 +18,12 @@
   "homepage": "https://github.com/jazon-liu/MCG_Bot#readme",
   "dependencies": {
     "bufferutil": "^4.0.0",
+    "colors": "^1.3.1",
     "discord.js": "^11.3.2",
     "file-system": "^2.2.2",
     "fortnite-api": "^2.12.2",
     "hypixel": "^1.0.3",
+    "moment": "^2.22.2",
     "npm": "^6.2.0",
     "path": "^0.12.7",
     "request": "^2.87.0",
