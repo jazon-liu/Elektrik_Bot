@@ -60,6 +60,7 @@ typings/
 # next.js build output
 .next
 
-# block bot token
+# block sensitive data
 config/config.json
 config/token.json
+config/keys.json

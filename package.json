@@ -20,7 +20,11 @@
     "bufferutil": "^4.0.0",
     "discord.js": "^11.3.2",
     "file-system": "^2.2.2",
+    "fortnite-api": "^2.12.2",
+    "hypixel": "^1.0.3",
+    "npm": "^6.2.0",
     "path": "^0.12.7",
+    "request": "^2.87.0",
     "uws": "^10.148.1",
     "winston": "^3.0.0"
   }
