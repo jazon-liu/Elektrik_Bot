@@ -4,9 +4,10 @@ console.time("Files loaded")
 
 // Dependencies
 const Discord = require("discord.js");
+const Hypixel = require("hypixel");
+const fetch = require("node-fetch");
 const fs = require("file-system");
 const path = require("path");
-const request = require("request");
 const moment = require("moment");
 const colors = require("colors");
 
@@ -53,6 +54,33 @@ bot.on("message", async message => {
   let mChannel = message.channel
   let cmd = msgArray[0]
 
+  // Define functions
+  // Makes embeds non-depression-inducing
+  function sendInfo (color, title, description) {
+    message.channel.send({embed: {
+        color: color,
+        author: {
+          name: bot.user.username,
+          icon_url: bot.user.avatarURL
+        },
+        title: title,
+        description: description
+      }
+    });
+  }
+
+  // Converts a MC player name to the UUID
+  function convertToUUID (playerName) {
+    //console.time("Got UUID for " + playerName)
+    fetch("https://api.mojang.com/users/profiles/minecraft/" + playerName)
+      .then(res => res.json().catch((err) => console.error((playerName + " is not a real account").red)))
+      .then(function (json) {
+        let obj = JSON.parse(json)
+        console.log(obj)
+      })
+        //console.timeEnd("Got UUID for " + playerName)
+  };
+
   if (cmd === "PING") {
     let userPing = (receivedTime[1] - Date.now()) // Ping from user to the bot
     let serverPing = bot.ping
@@ -77,7 +105,6 @@ bot.on("message", async message => {
       }],
       timestamp: new Date(),
       footer: {
-      icon_url: bot.user.avatarURL,
       text: "Made by Jason Liu"
         }
       }
@@ -92,16 +119,28 @@ bot.on("message", async message => {
       },
       title: "Commands Help",
       fields: [{
-          name: prefix + "ping",
-          value: "Gets pings from user to bot, bot to Discord, and combined ping of both"
-        },
-        {
           name: prefix + "help",
           value: "Shows descriptions for commands, and how to use them"
+        },
+        {
+          name: prefix + "ping",
+          value: "Gets pings from user to bot, bot to Discord, and combined ping of both"
+        }],
+        timestamp: new Date(),
+        footer: {
+        text: "Made by Jason Liu"
         }
-        }]
       }
     });
+  }
+  else if (cmd === "HYPIXEL") {
+    if (msgArray.length === 1 || msgArray.length === 2) {
+      sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
+    }
+    else {
+      let abc = convertToUUID("CONK_ASSASSIN")
+      console.log(abc)
+    }
   }
 });
 bot.login(tokenFile.token);
