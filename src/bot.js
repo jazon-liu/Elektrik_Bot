@@ -5,7 +5,7 @@ console.time("Files loaded")
 // Dependencies
 const Discord = require("discord.js");
 const Hypixel = require("hypixel");
-const fetch = require("node-fetch");
+const rp = require("request-promise")
 const fs = require("file-system");
 const path = require("path");
 const moment = require("moment");
@@ -26,6 +26,9 @@ catch (err) {
 }
 console.timeEnd("Files loaded")
 
+// Create hypixel object
+const hyp = new Hypixel({key: keyFile.hypixel});
+
 bot.on("ready", async () => {
   console.timeEnd("Bot online")
   bot.user.setActivity("v" + configFile.version + " || " + configFile.prefix + "help");
@@ -34,8 +37,6 @@ bot.on("ready", async () => {
 bot.on("message", async message => {
   let receivedTime = [moment(), Date.now()];
   console.log(("Message detected: " + receivedTime[0].format("YYYY-MM-DD kk:mm:ss:SSS")).green);
-
-
 
   let msg = message.content;
   let prefix = configFile.prefix;
@@ -55,7 +56,7 @@ bot.on("message", async message => {
   let cmd = msgArray[0]
 
   // Define functions
-  // Makes embeds non-depression-inducing
+  // Makes embeds easier
   function sendInfo (color, title, description) {
     message.channel.send({embed: {
         color: color,
@@ -71,14 +72,12 @@ bot.on("message", async message => {
 
   // Converts a MC player name to the UUID
   function convertToUUID (playerName) {
-    //console.time("Got UUID for " + playerName)
-    fetch("https://api.mojang.com/users/profiles/minecraft/" + playerName)
-      .then(res => res.json().catch((err) => console.error((playerName + " is not a real account").red)))
-      .then(function (json) {
-        let obj = JSON.parse(json)
-        console.log(obj)
-      })
-        //console.timeEnd("Got UUID for " + playerName)
+    console.time("Got UUID for " + playerName)
+    return rp("https://api.mojang.com/users/profiles/minecraft/" + playerName).then(body => {
+      let jsonData = JSON.parse(body);
+      return jsonData;
+    });
+    console.timeEnd("Got UUID for " + playerName)
   };
 
   if (cmd === "PING") {
@@ -138,8 +137,11 @@ bot.on("message", async message => {
       sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
     }
     else {
-      let abc = convertToUUID("CONK_ASSASSIN")
-      console.log(abc)
+      convertToUUID(msgArray[1]).then(data => {
+        console.log(hyp.getPlayer(data.id))
+      }).catch(err => {
+        sendInfo(15773006, ":grey_exclamation: Command Info", "You have entered a nonexistant player name! Please check your spelling!")
+      });
     }
   }
 });
