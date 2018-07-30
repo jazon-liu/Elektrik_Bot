@@ -5,6 +5,7 @@ console.time("Files loaded")
 // Dependencies
 const Discord = require("discord.js");
 const Hypixel = require("hypixel");
+const Fortnite = require("fortnite-api")
 const rp = require("request-promise")
 const fs = require("file-system");
 const path = require("path");
@@ -28,6 +29,19 @@ console.timeEnd("Files loaded")
 
 // Create hypixel object
 const hyp = new Hypixel({key: keyFile.hypixel});
+
+// Settings for fortnite API
+let fortniteAPI = new Fortnite(
+  [
+    keyFile.fn_email,
+    keyFile.fn_password,
+    keyFile.fn_launcher,
+    keyFile.fn_client
+  ],
+  {
+    debug: true
+  }
+);
 
 bot.on("ready", async () => {
   console.timeEnd("Bot online")
@@ -68,12 +82,19 @@ bot.on("message", async message => {
 
   // Converts a MC player name to the UUID
   function convertToUUID (playerName) {
-    console.time("Got UUID for " + playerName)
     return rp("https://api.mojang.com/users/profiles/minecraft/" + playerName).then(body => {
       let jsonData = JSON.parse(body);
       return jsonData;
     });
-    console.timeEnd("Got UUID for " + playerName)
+  };
+
+  // Get data from Fortnite API
+  function getFortniteData(username, platform) {
+    fortniteAPI.login().then(() => {
+      fortniteAPI
+        .getStatsBR(username, platform, "alltime")
+        .then(stats => console.log(stats))
+    });
   };
 
   if (cmd === "PING") {
@@ -142,7 +163,7 @@ bot.on("message", async message => {
                 let bedwStats = player.stats.Bedwars;
                 let teamSize = msgArray[3];
                 teamSize = teamSize.toUpperCase();
-                if (teamSize === "GENERAL" && player.stats.Bedwars != undefined) {
+                if (teamSize === "GENERAL" && bedwStats != undefined) {
                   mChannel.send({embed: {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: General"),
@@ -154,9 +175,121 @@ bot.on("message", async message => {
                          + bedwStats.wins_bedwars + " **Losses**: " + bedwStats.losses_bedwars + " **Win Rate**: "
                          + ((bedwStats.wins_bedwars/bedwStats.games_played_bedwars) * 100).toFixed(0) + "%")
                       }, {
+                        name: "PVP Stats",
+                        value: ("**Final Kills**: " + bedwStats.final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.void_kills_bedwars + bedwStats.fall_kills_bedwars)
+                        + "\n **Beds Broken**: " + bedwStats.beds_broken_bedwars + " **Beds Lost**: " + bedwStats.beds_lost_bedwars)
+                      }, {
                         name: "Resources",
                         value: ("**Iron Collected**: " + bedwStats.iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.gold_resources_collected_bedwars
                         + "\n **Diamonds Collected**: " + bedwStats.diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.emerald_resources_collected_bedwars)
+                      }],
+                      timestamp: new Date(),
+                      footer: {
+                        text: "Made by Jason Liu"
+                      }
+                    }
+                  });
+                }
+                else if (teamSize === "SOLO" && bedwStats != undefined) {
+                  mChannel.send({embed: {
+                      color: 5119,
+                      title: ("Hypixel's BedWars Stats: Solo"),
+                      description: "Solo Stats for " + name,
+                      fields: [{
+                        name: "General",
+                        value: ("**Games Played**: " + bedwStats.eight_one_games_played_bedwars + "\n **Kills**: " + bedwStats.eight_one_kills_bedwars + " **Deaths**: "
+                         + bedwStats.eight_one_deaths_bedwars + " **KDR**: " + (bedwStats.eight_one_kills_bedwars/bedwStats.eight_one_deaths_bedwars).toFixed(2) + "\n **Wins**: "
+                         + bedwStats.eight_one_wins_bedwars + " **Losses**: " + bedwStats.eight_one_losses_bedwars + " **Win Rate**: "
+                         + ((bedwStats.eight_one_wins_bedwars/bedwStats.eight_one_games_played_bedwars) * 100).toFixed(0) + "%")
+                      }, {
+                        name: "PVP Stats",
+                        value: ("**Final Kills**: " + bedwStats.eight_one_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.eight_one_void_kills_bedwars + bedwStats.eight_one_fall_kills_bedwars)
+                        + "\n **Beds Broken**: " + bedwStats.eight_one_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.eight_one_beds_lost_bedwars)
+                      }, {
+                        name: "Resources",
+                        value: ("**Iron Collected**: " + bedwStats.eight_one_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.eight_one_gold_resources_collected_bedwars
+                        + "\n **Diamonds Collected**: " + bedwStats.eight_one_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.eight_one_emerald_resources_collected_bedwars)
+                      }],
+                      timestamp: new Date(),
+                      footer: {
+                        text: "Made by Jason Liu"
+                      }
+                    }
+                  });
+                }
+                else if (teamSize === "DOUBLES" && bedwStats != undefined) {
+                  mChannel.send({embed: {
+                      color: 5119,
+                      title: ("Hypixel's BedWars Stats: Doubles"),
+                      description: "Doubles Stats for " + name,
+                      fields: [{
+                        name: "General",
+                        value: ("**Games Played**: " + bedwStats.eight_two_games_played_bedwars + "\n **Kills**: " + bedwStats.eight_two_kills_bedwars + " **Deaths**: "
+                         + bedwStats.eight_two_deaths_bedwars + " **KDR**: " + (bedwStats.eight_two_kills_bedwars/bedwStats.eight_two_deaths_bedwars).toFixed(2) + "\n **Wins**: "
+                         + bedwStats.eight_two_wins_bedwars + " **Losses**: " + bedwStats.eight_two_losses_bedwars + " **Win Rate**: "
+                         + ((bedwStats.eight_two_wins_bedwars/bedwStats.eight_two_games_played_bedwars) * 100).toFixed(0) + "%")
+                      }, {
+                        name: "PVP Stats",
+                        value: ("**Final Kills**: " + bedwStats.eight_two_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.eight_two_void_kills_bedwars + bedwStats.eight_two_fall_kills_bedwars)
+                        + "\n **Beds Broken**: " + bedwStats.eight_two_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.eight_two_beds_lost_bedwars)
+                      }, {
+                        name: "Resources",
+                        value: ("**Iron Collected**: " + bedwStats.eight_two_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.eight_two_gold_resources_collected_bedwars
+                        + "\n **Diamonds Collected**: " + bedwStats.eight_two_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.eight_two_emerald_resources_collected_bedwars)
+                      }],
+                      timestamp: new Date(),
+                      footer: {
+                        text: "Made by Jason Liu"
+                      }
+                    }
+                  });
+                }
+                else if (teamSize === "3V3" && bedwStats != undefined) {
+                  mChannel.send({embed: {
+                      color: 5119,
+                      title: ("Hypixel's BedWars Stats: 3v3"),
+                      description: "3v3 Stats for " + name,
+                      fields: [{
+                        name: "General",
+                        value: ("**Games Played**: " + bedwStats.four_three_games_played_bedwars + "\n **Kills**: " + bedwStats.four_three_kills_bedwars + " **Deaths**: "
+                         + bedwStats.four_three_deaths_bedwars + " **KDR**: " + (bedwStats.four_three_kills_bedwars/bedwStats.four_three_deaths_bedwars).toFixed(2) + "\n **Wins**: "
+                         + bedwStats.four_three_wins_bedwars + " **Losses**: " + bedwStats.four_three_losses_bedwars + " **Win Rate**: "
+                         + ((bedwStats.four_three_wins_bedwars/bedwStats.four_three_games_played_bedwars) * 100).toFixed(0) + "%")
+                      }, {
+                        name: "PVP Stats",
+                        value: ("**Final Kills**: " + bedwStats.four_three_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.four_three_void_kills_bedwars + bedwStats.four_three_fall_kills_bedwars)
+                        + "\n **Beds Broken**: " + bedwStats.four_three_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.four_three_beds_lost_bedwars)
+                      }, {
+                        name: "Resources",
+                        value: ("**Iron Collected**: " + bedwStats.four_three_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.four_three_gold_resources_collected_bedwars
+                        + "\n **Diamonds Collected**: " + bedwStats.four_three_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.four_three_emerald_resources_collected_bedwars)
+                      }],
+                      timestamp: new Date(),
+                      footer: {
+                        text: "Made by Jason Liu"
+                      }
+                    }
+                  });
+                }
+                else if (teamSize === "4V4" && bedwStats != undefined) {
+                  mChannel.send({embed: {
+                      color: 5119,
+                      title: ("Hypixel's BedWars Stats: 4v4"),
+                      description: "4v4 Stats for " + name,
+                      fields: [{
+                        name: "General",
+                        value: ("**Games Played**: " + bedwStats.four_four_games_played_bedwars + "\n **Kills**: " + bedwStats.four_four_kills_bedwars + " **Deaths**: "
+                         + bedwStats.four_four_deaths_bedwars + " **KDR**: " + (bedwStats.four_four_kills_bedwars/bedwStats.four_four_deaths_bedwars).toFixed(2) + "\n **Wins**: "
+                         + bedwStats.four_four_wins_bedwars + " **Losses**: " + bedwStats.four_four_losses_bedwars + " **Win Rate**: "
+                         + ((bedwStats.four_four_wins_bedwars/bedwStats.four_four_games_played_bedwars) * 100).toFixed(0) + "%")
+                      }, {
+                        name: "PVP Stats",
+                        value: ("**Final Kills**: " + bedwStats.four_four_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.four_four_void_kills_bedwars + bedwStats.four_four_fall_kills_bedwars)
+                        + "\n **Beds Broken**: " + bedwStats.four_four_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.four_four_beds_lost_bedwars)
+                      }, {
+                        name: "Resources",
+                        value: ("**Iron Collected**: " + bedwStats.four_four_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.four_four_gold_resources_collected_bedwars
+                        + "\n **Diamonds Collected**: " + bedwStats.four_four_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.four_four_emerald_resources_collected_bedwars)
                       }],
                       timestamp: new Date(),
                       footer: {
@@ -179,6 +312,9 @@ bot.on("message", async message => {
         sendInfo(15773006, ":grey_exclamation: Command Info", "You have entered a nonexistant player name! Please check your spelling!")
       });
     }
+  }
+  else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
+
   }
 });
 bot.login(tokenFile.token);
