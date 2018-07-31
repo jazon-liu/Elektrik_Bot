@@ -75,7 +75,11 @@ bot.on("message", async message => {
     message.channel.send({embed: {
         color: color,
         title: title,
-        description: description
+        description: description,
+        timestamp: new Date(),
+        footer: {
+          text: "Made by Jason Liu"
+        }
       }
     });
   }
@@ -89,11 +93,14 @@ bot.on("message", async message => {
   };
 
   // Get data from Fortnite API
-  function getFortniteData(username, platform) {
-    fortniteAPI.login().then(() => {
-      fortniteAPI
-        .getStatsBR(username, platform, "alltime")
-        .then(stats => console.log(stats))
+  function getFortniteData(username, platform, timeframe) {
+    return fortniteAPI.login().then(() => {
+      return fortniteAPI
+        .getStatsBR(username, platform, timeframe)
+        .then(stats => {
+          let statsData = stats;
+          return statsData
+        });
     });
   };
 
@@ -309,12 +316,46 @@ bot.on("message", async message => {
           }
         });
       }).catch(err => {
-        sendInfo(15773006, ":grey_exclamation: Command Info", "You have entered a nonexistant player name! Please check your spelling!")
+        sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
       });
     }
   }
   else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
+    // Example command [prefix]fortnite [username] [platform]
+    let msgArray = msgArray.map(x => x.toUpperCase());
+    
+    if (data === "Player Not Found") {
+      sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
+    }
+    else {
+      if (msgArray.length === 1) {
+        sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
+      }
+      else if (msgArray.length === 3) {
+        // Default action
+        console.log("No other parameters given, defaulting to combined stats...".green)
 
+        let username = msgArray[1]
+        let platform = msgArray[2]
+        if (platform.toUpperCase() === "PC" || platform.toUpperCase() === "PS4" || platform.toUpperCase() === "XB1") {
+          getFortniteData(username, platform.toLowerCase(), "alltime")
+        }
+        else {
+          sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
+        }
+
+      }
+      else if (msgArray.length === 4) {
+        if (msgArray.includes("SOLO") || msgArray.includes("DUOS") || msgArray.includes("DOUBLES") || msgArray.includes("SQUADS")) {
+
+        }
+        else if (msgArray.includes("ALLTIME") || msgArray.includes("SEASONS") || msgArray.includes("SEASONAL")) {
+
+        }
+      }
+      else if (msgArray.length === 5) {
+
+      }
   }
 });
 bot.login(tokenFile.token);
