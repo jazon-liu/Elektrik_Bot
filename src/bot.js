@@ -64,7 +64,6 @@ bot.on("message", async message => {
   }
 
   let msgArray = msg.substring(prefix.length).split(" ");
-  msgArray = msgArray.map(element => element.toUpperCase());
 
   let mChannel = message.channel
   let cmd = msgArray[0]
@@ -321,41 +320,111 @@ bot.on("message", async message => {
     }
   }
   else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
-    // Example command [prefix]fortnite [username] [platform]
-    let msgArray = msgArray.map(x => x.toUpperCase());
-    
-    if (data === "Player Not Found") {
-      sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
+    // Example command [prefix]fortnite [username] [platform] [mode] [timeframe]
+    /*getFortniteData("MCG_Potato", "pc", "alltime").then(data => {
+      console.log(data)
+    })*/
+
+
+    if (msgArray.length === 1 || msgArray.length === 2) {
+      sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
     }
     else {
-      if (msgArray.length === 1) {
-        sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
-      }
-      else if (msgArray.length === 3) {
+      let username = msgArray[1];
+      let platform = msgArray[2].toLowerCase();
+
+      msgArray = msgArray.map(x => x.toUpperCase());
+
+      if (msgArray.length === 3) {
         // Default action
         console.log("No other parameters given, defaulting to combined stats...".green)
 
-        let username = msgArray[1]
-        let platform = msgArray[2]
-        if (platform.toUpperCase() === "PC" || platform.toUpperCase() === "PS4" || platform.toUpperCase() === "XB1") {
-          getFortniteData(username, platform.toLowerCase(), "alltime")
+        if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
+          if (platform === "xbox") {
+            platform = "xb1";
+          }
+          getFortniteData(username, platform, "alltime").then(stats => {
+            // Stats code here, print out combined stats only
+            let kd = 'k/d'
+            let win = 'win%'
+
+            let totalWins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
+            let kdr = stats.lifetimeStats['k/d'];
+            let winRate = stats.lifetimeStats['win%'];
+            let matches = stats.lifetimeStats.matches;
+            let kills = stats.lifetimeStats.kills;
+            let averageKills = stats.lifetimeStats.killsPerMatch;
+
+            mChannel.send({embed: {
+              color: 5119,
+              title: ("Fortnite Stats: Alltime General"),
+              fields: [{
+                name: username,
+                value: ("**Total Wins**: " + totalWins + " **KDR**: " + kdr
+                + "\n **Win Rate**: " + winRate + " **Matches**: " + matches
+                + "\n **Kills**: " + kills + " **Average Kills**: " + averageKills)
+              }],
+              timestamp: new Date(),
+              footer: {
+                text: "Made by Jason Liu"
+              }
+            }
+          });
+          }).catch(err => {
+            console.log(err);
+          });
         }
         else {
           sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
         }
-
       }
       else if (msgArray.length === 4) {
         if (msgArray.includes("SOLO") || msgArray.includes("DUOS") || msgArray.includes("DOUBLES") || msgArray.includes("SQUADS")) {
-
+          if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
+            if (platform === "xbox") {
+              platform = "xb1";
+            }
+            getFortniteData(username, platform.toLowerCase(), "alltime").then(stats => {
+              // Stats code here, add if blocks for different modes
+            }).catch(err => {
+              console.log(err);
+            });
+          }
+          else {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
+          }
         }
-        else if (msgArray.includes("ALLTIME") || msgArray.includes("SEASONS") || msgArray.includes("SEASONAL")) {
-
+        else if (msgArray.includes("ALLTIME") || msgArray.includes("SEASONS") || msgArray.includes("SEASONAL") || msgArray.includes("SEASON")) {
+          let timeframe = msgArray[3].toLowerCase(); // Only in this case
+          if (msgArray[3] === "SEASONAL" || msgArray[3] === "SEASON" || msgArray[3] === 'SEASONS') {
+            timeframe = "weekly"
+            if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
+              if (platform === "xbox") {
+                platform = "xb1";
+              }
+              getFortniteData(username, platform.toLowerCase(), timeframe).then(stats => {
+                // Stats code here, no specific mode
+              }).catch(err => {
+                console.log(err);
+              });
+            }
+            else {
+              sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
+            }
+          }
+          else {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid timeframe to get stats!")
+          }
+        }
+        else {
+          sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter either a timeframe or a gamemode!")
         }
       }
       else if (msgArray.length === 5) {
-
+        let mode = msgArray[3].toUpperCase();
+        let timeframe = msgArray[4].toUpperCase();
       }
+    }
   }
 });
 bot.login(tokenFile.token);
