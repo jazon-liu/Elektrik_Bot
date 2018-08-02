@@ -66,7 +66,7 @@ bot.on("message", async message => {
   let msgArray = msg.substring(prefix.length).split(" ");
 
   let mChannel = message.channel
-  let cmd = msgArray[0]
+  let cmd = msgArray[0].toUpperCase()
 
   // Define functions
   // Makes embeds easier
@@ -174,6 +174,9 @@ bot.on("message", async message => {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: General"),
                       description: "General Stats for " + name,
+                      thumbnail: {
+                        url: "https://i.imgur.com/FS8knC6.png"
+                      },
                       fields: [{
                         name: "General",
                         value: ("**Games Played**: " + bedwStats.games_played_bedwars + "\n **Kills**: " + bedwStats.kills_bedwars + " **Deaths**: "
@@ -201,6 +204,9 @@ bot.on("message", async message => {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: Solo"),
                       description: "Solo Stats for " + name,
+                      thumbnail: {
+                        url: "https://i.imgur.com/FS8knC6.png"
+                      },
                       fields: [{
                         name: "General",
                         value: ("**Games Played**: " + bedwStats.eight_one_games_played_bedwars + "\n **Kills**: " + bedwStats.eight_one_kills_bedwars + " **Deaths**: "
@@ -228,6 +234,9 @@ bot.on("message", async message => {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: Doubles"),
                       description: "Doubles Stats for " + name,
+                      thumbnail: {
+                        url: "https://i.imgur.com/FS8knC6.png"
+                      },
                       fields: [{
                         name: "General",
                         value: ("**Games Played**: " + bedwStats.eight_two_games_played_bedwars + "\n **Kills**: " + bedwStats.eight_two_kills_bedwars + " **Deaths**: "
@@ -255,6 +264,9 @@ bot.on("message", async message => {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: 3v3"),
                       description: "3v3 Stats for " + name,
+                      thumbnail: {
+                        url: "https://i.imgur.com/FS8knC6.png"
+                      },
                       fields: [{
                         name: "General",
                         value: ("**Games Played**: " + bedwStats.four_three_games_played_bedwars + "\n **Kills**: " + bedwStats.four_three_kills_bedwars + " **Deaths**: "
@@ -282,6 +294,9 @@ bot.on("message", async message => {
                       color: 5119,
                       title: ("Hypixel's BedWars Stats: 4v4"),
                       description: "4v4 Stats for " + name,
+                      thumbnail: {
+                        url: "https://i.imgur.com/FS8knC6.png"
+                      },
                       fields: [{
                         name: "General",
                         value: ("**Games Played**: " + bedwStats.four_four_games_played_bedwars + "\n **Kills**: " + bedwStats.four_four_kills_bedwars + " **Deaths**: "
@@ -357,7 +372,10 @@ bot.on("message", async message => {
 
             mChannel.send({embed: {
               color: 5119,
-              title: ("Fortnite Stats: Alltime General"),
+              title: ("Fortnite Stats: Alltime General                                                    "),
+              thumbnail: {
+                url: "https://i.imgur.com/JB90ely.jpg"
+              },
               fields: [{
                 name: username,
                 value: ("**Total Wins**: " + totalWins + " **KDR**: " + kdr
