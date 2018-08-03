@@ -1,2 +1,6 @@
 # MCG_Bot
-Discord bot for MC Gang discord channel
+## Setup
+1. Clone from repository
+  -`git clone`
+2. Install dependancies
+  -`npm install`
