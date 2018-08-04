@@ -164,6 +164,47 @@ bot.on("message", async message => {
     });
   }
 
+  function sendFortnite (wins, kdr, winRate, matches, kills, averageKills, mode, timeframe) {
+    message.channel.send({embed: {
+      color: 5119,
+      title: "**" + username + "**",
+      description: timeframe + " " + mode + " Stats",
+      thumbnail: {
+        url: "https://i.imgur.com/JB90ely.jpg"
+      },
+      fields: [{
+        name: "**Total Wins**",
+        value: wins + " Wins",
+        inline: true
+      }, {
+        name: "**KDR**",
+        value: kdr,
+        inline: true
+      }, {
+        name: "**Win Rate**",
+        value: winRate + "%",
+        inline: true
+      }, {
+        name: "**Matches**",
+        value: matches + " Matches",
+        inline: true
+      }, {
+        name: "**Kills**",
+        value: kills + " Kills",
+        inline: true
+      }, {
+        name: "**Average Kills**",
+        value: averageKills + " Kills Per Game",
+        inline: true
+      }],
+      timestamp: new Date(),
+      footer: {
+        text: "Made by Jason Liu"
+      }
+    }
+  });
+  }
+
   // Converts a MC player name to the UUID
   function convertToUUID (playerName) {
     return rp("https://api.mojang.com/users/profiles/minecraft/" + playerName).then(body => {
@@ -251,169 +292,71 @@ bot.on("message", async message => {
                 let bedwStats = player.stats.Bedwars;
                 let teamSize = msgArray[3];
                 teamSize = teamSize.toUpperCase();
-                if (teamSize === "GENERAL" && bedwStats != undefined) {
-                  teamSize = capitalize(teamSize)
+                if (bedwStats != undefined) {
+                  if (teamSize === "GENERAL" || teamSize === "SOLO" || teamSize === "DOUBLES" || teamSize === "3V3" || teamSize === "4V4") {
+                    //console.log(bedwStats)
+                    let modeHeader
+                    switch (teamSize) {
+                      case ("GENERAL"):
+                        modeHeader = "";
+                        break;
+                      case ("SOLO"):
+                        modeHeader = "eight_one_";
+                        break;
+                      case ("DOUBLES"):
+                        modeHeader = "eight_two_";
+                        break;
+                      case ("3V3"):
+                        modeHeader = "four_three_";
+                        break;
+                      case ("4V4"):
+                        modeHeader = "four_four_";
+                        break;
+                    }
 
-                  // Variable definition to make embed easier
-                  let gamesPlayed = bedwStats.games_played_bedwars;
-                  let winRate = ((bedwStats.wins_bedwars/bedwStats.games_played_bedwars)*100).toFixed(0)
-                  let kills = bedwStats.kills_bedwars;
-                  let kdr = (bedwStats.kills_bedwars/bedwStats.deaths_bedwars).toFixed(2);
+                    teamSize = capitalize(teamSize)
 
-                  let finalKills = bedwStats.final_kills_bedwars;
-                  let voidKills = bedwStats.void_kills_bedwars + bedwStats.fall_kills_bedwars;
-                  let bedsBroken = bedwStats.beds_broken_bedwars;
-                  let bedsLost = bedwStats.beds_lost_bedwars;
+                    // Variable definition to make embed easier
+                    let deaths = bedwStats[modeHeader + "deaths_bedwars"];
+                    let wins = bedwStats[modeHeader + "wins_bedwars"];
+                    let vKills = bedwStats[modeHeader + "void_kills_bedwars"];
+                    let fKills = bedwStats[modeHeader + "fall_kills_bedwars"];
 
-                  let iron = bedwStats.iron_resources_collected_bedwars;
-                  let gold = bedwStats.gold_resources_collected_bedwars;
-                  let diamond = bedwStats.diamond_resources_collected_bedwars;
-                  let emerald = bedwStats.emerald_resources_collected_bedwars;
+                    let gamesPlayed = bedwStats[modeHeader + "games_played_bedwars"];
 
-                  sendHypixel(gamesPlayed, winRate, kills, kdr, finalKills, voidKills, bedsBroken, bedsLost, iron, gold, diamond, emerald, teamSize, name)
-                }
-                else if (teamSize === "DOUBLES" && bedwStats != undefined) {
-                  teamSize = capitalize(teamSize)
+                    let kills = bedwStats[modeHeader + "kills_bedwars"];
+                    let finalKills = bedwStats[modeHeader + "final_kills_bedwars"];
+                    let bedsBroken = bedwStats[modeHeader + "beds_broken_bedwars"];
+                    let bedsLost = bedwStats[modeHeader + "beds_lost_bedwars"];
 
-                  // Variable definition to make embed easier
-                  let gamesPlayed = bedwStats.games_played_bedwars;
-                  let winRate = ((bedwStats.wins_bedwars/bedwStats.games_played_bedwars)*100).toFixed(0)
-                  let kills = bedwStats.kills_bedwars;
-                  let kdr = (bedwStats.kills_bedwars/bedwStats.deaths_bedwars).toFixed(2);
+                    let iron = bedwStats[modeHeader + "iron_resources_collected_bedwars"];
+                    let gold = bedwStats[modeHeader + "gold_resources_collected_bedwars"];
+                    let diamond = bedwStats[modeHeader + "diamond_resources_collected_bedwars"];
+                    let emerald = bedwStats[modeHeader + "emerald_resources_collected_bedwars"];
 
-                  let finalKills = bedwStats.final_kills_bedwars;
-                  let voidKills = bedwStats.void_kills_bedwars + bedwStats.fall_kills_bedwars;
-                  let bedsBroken = bedwStats.beds_broken_bedwars;
-                  let bedsLost = bedwStats.beds_lost_bedwars;
-
-                  let iron = bedwStats.iron_resources_collected_bedwars;
-                  let gold = bedwStats.gold_resources_collected_bedwars;
-                  let diamond = bedwStats.diamond_resources_collected_bedwars;
-                  let emerald = bedwStats.emerald_resources_collected_bedwars;
-
-                  mChannel.send({embed: {
-                      color: 5119,
-                      title: ("Hypixel's BedWars Stats: Doubles"),
-                      description: "Doubles Stats for " + name,
-                      thumbnail: {
-                        url: "https://i.imgur.com/FS8knC6.png"
-                      },
-                      fields: [{
-                        name: "General",
-                        value: ("**Games Played**: " + bedwStats.eight_two_games_played_bedwars + "\n **Kills**: " + bedwStats.eight_two_kills_bedwars + " **Deaths**: "
-                         + bedwStats.eight_two_deaths_bedwars + " **KDR**: " + (bedwStats.eight_two_kills_bedwars/bedwStats.eight_two_deaths_bedwars).toFixed(2) + "\n **Wins**: "
-                         + bedwStats.eight_two_wins_bedwars + " **Losses**: " + bedwStats.eight_two_losses_bedwars + " **Win Rate**: "
-                         + ((bedwStats.eight_two_wins_bedwars/bedwStats.eight_two_games_played_bedwars) * 100).toFixed(0) + "%")
-                      }, {
-                        name: "PVP Stats",
-                        value: ("**Final Kills**: " + bedwStats.eight_two_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.eight_two_void_kills_bedwars + bedwStats.eight_two_fall_kills_bedwars)
-                        + "\n **Beds Broken**: " + bedwStats.eight_two_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.eight_two_beds_lost_bedwars)
-                      }, {
-                        name: "Resources",
-                        value: ("**Iron Collected**: " + bedwStats.eight_two_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.eight_two_gold_resources_collected_bedwars
-                        + "\n **Diamonds Collected**: " + bedwStats.eight_two_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.eight_two_emerald_resources_collected_bedwars)
-                      }],
-                      timestamp: new Date(),
-                      footer: {
-                        text: "Made by Jason Liu"
+                    let varList = [deaths, wins, vKills, fKills, gamesPlayed, kills, finalKills, bedsBroken, bedsLost, iron, gold, emerald, diamond];
+                    for (i = 0; i< varList.length; i++) {
+                      if (varList[i] === undefined) {
+                        varList[i] = 0
                       }
                     }
-                  });
-                }
-                else if (teamSize === "3V3" && bedwStats != undefined) {
-                  // Variable definition to make embed easier
-                  let gamesPlayed = bedwStats.games_played_bedwars;
-                  let winRate = ((bedwStats.wins_bedwars/bedwStats.games_played_bedwars)*100).toFixed(0)
-                  let kills = bedwStats.kills_bedwars;
-                  let kdr = (bedwStats.kills_bedwars/bedwStats.deaths_bedwars).toFixed(2);
+                    deaths = varList[0]; wins = varList[1]; vKills = varList[2]; fKills = varList[3]; gamesPlayed = varList[4]; kills = varList[5]
+                    finalKills = varList[6]; bedsBroken = varList[7]; bedsLost = varList[8]; iron = varList[9]; gold = varList[10]; diamond = varList[11]; emerald = varList[12];
 
-                  let finalKills = bedwStats.final_kills_bedwars;
-                  let voidKills = bedwStats.void_kills_bedwars + bedwStats.fall_kills_bedwars;
-                  let bedsBroken = bedwStats.beds_broken_bedwars;
-                  let bedsLost = bedwStats.beds_lost_bedwars;
+                    let kdr = (kills/deaths).toFixed(2);
+                    let voidKills = vKills + fKills;
+                    let winRate = ((wins/gamesPlayed)*100).toFixed(0)
 
-                  let iron = bedwStats.iron_resources_collected_bedwars;
-                  let gold = bedwStats.gold_resources_collected_bedwars;
-                  let diamond = bedwStats.diamond_resources_collected_bedwars;
-                  let emerald = bedwStats.emerald_resources_collected_bedwars;
 
-                  mChannel.send({embed: {
-                      color: 5119,
-                      title: ("Hypixel's BedWars Stats: 3v3"),
-                      description: "3v3 Stats for " + name,
-                      thumbnail: {
-                        url: "https://i.imgur.com/FS8knC6.png"
-                      },
-                      fields: [{
-                        name: "General",
-                        value: ("**Games Played**: " + bedwStats.four_three_games_played_bedwars + "\n **Kills**: " + bedwStats.four_three_kills_bedwars + " **Deaths**: "
-                         + bedwStats.four_three_deaths_bedwars + " **KDR**: " + (bedwStats.four_three_kills_bedwars/bedwStats.four_three_deaths_bedwars).toFixed(2) + "\n **Wins**: "
-                         + bedwStats.four_three_wins_bedwars + " **Losses**: " + bedwStats.four_three_losses_bedwars + " **Win Rate**: "
-                         + ((bedwStats.four_three_wins_bedwars/bedwStats.four_three_games_played_bedwars) * 100).toFixed(0) + "%")
-                      }, {
-                        name: "PVP Stats",
-                        value: ("**Final Kills**: " + bedwStats.four_three_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.four_three_void_kills_bedwars + bedwStats.four_three_fall_kills_bedwars)
-                        + "\n **Beds Broken**: " + bedwStats.four_three_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.four_three_beds_lost_bedwars)
-                      }, {
-                        name: "Resources",
-                        value: ("**Iron Collected**: " + bedwStats.four_three_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.four_three_gold_resources_collected_bedwars
-                        + "\n **Diamonds Collected**: " + bedwStats.four_three_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.four_three_emerald_resources_collected_bedwars)
-                      }],
-                      timestamp: new Date(),
-                      footer: {
-                        text: "Made by Jason Liu"
-                      }
-                    }
-                  });
-                }
-                else if (teamSize === "4V4" && bedwStats != undefined) {
-                  // Variable definition to make embed easier
-                  let gamesPlayed = bedwStats.games_played_bedwars;
-                  let winRate = ((bedwStats.wins_bedwars/bedwStats.games_played_bedwars)*100).toFixed(0)
-                  let kills = bedwStats.kills_bedwars;
-                  let kdr = (bedwStats.kills_bedwars/bedwStats.deaths_bedwars).toFixed(2);
 
-                  let finalKills = bedwStats.final_kills_bedwars;
-                  let voidKills = bedwStats.void_kills_bedwars + bedwStats.fall_kills_bedwars;
-                  let bedsBroken = bedwStats.beds_broken_bedwars;
-                  let bedsLost = bedwStats.beds_lost_bedwars;
-
-                  let iron = bedwStats.iron_resources_collected_bedwars;
-                  let gold = bedwStats.gold_resources_collected_bedwars;
-                  let diamond = bedwStats.diamond_resources_collected_bedwars;
-                  let emerald = bedwStats.emerald_resources_collected_bedwars;
-
-                  mChannel.send({embed: {
-                      color: 5119,
-                      title: ("Hypixel's BedWars Stats: 4v4"),
-                      description: "4v4 Stats for " + name,
-                      thumbnail: {
-                        url: "https://i.imgur.com/FS8knC6.png"
-                      },
-                      fields: [{
-                        name: "General",
-                        value: ("**Games Played**: " + bedwStats.four_four_games_played_bedwars + "\n **Kills**: " + bedwStats.four_four_kills_bedwars + " **Deaths**: "
-                         + bedwStats.four_four_deaths_bedwars + " **KDR**: " + (bedwStats.four_four_kills_bedwars/bedwStats.four_four_deaths_bedwars).toFixed(2) + "\n **Wins**: "
-                         + bedwStats.four_four_wins_bedwars + " **Losses**: " + bedwStats.four_four_losses_bedwars + " **Win Rate**: "
-                         + ((bedwStats.four_four_wins_bedwars/bedwStats.four_four_games_played_bedwars) * 100).toFixed(0) + "%")
-                      }, {
-                        name: "PVP Stats",
-                        value: ("**Final Kills**: " + bedwStats.four_four_final_kills_bedwars + " **Void/Fall Kills**: " + (bedwStats.four_four_void_kills_bedwars + bedwStats.four_four_fall_kills_bedwars)
-                        + "\n **Beds Broken**: " + bedwStats.four_four_beds_broken_bedwars + " **Beds Lost**: " + bedwStats.four_four_beds_lost_bedwars)
-                      }, {
-                        name: "Resources",
-                        value: ("**Iron Collected**: " + bedwStats.four_four_iron_resources_collected_bedwars + " **Gold Collected**: " + bedwStats.four_four_gold_resources_collected_bedwars
-                        + "\n **Diamonds Collected**: " + bedwStats.four_four_diamond_resources_collected_bedwars + " **Emeralds Collected**: " + bedwStats.four_four_emerald_resources_collected_bedwars)
-                      }],
-                      timestamp: new Date(),
-                      footer: {
-                        text: "Made by Jason Liu"
-                      }
-                    }
-                  });
+                    sendHypixel(gamesPlayed, winRate, kills, kdr, finalKills, voidKills, bedsBroken, bedsLost, iron, gold, diamond, emerald, teamSize, name)
+                  }
+                  else {
+                    sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the proper mode! (General, Solo, Doubles, 3v3, 4v4)")
+                  }
                 }
                 else {
-                  sendInfo(15773006, ":grey_exclamation: Command Info", "User has not played BedWars")
+                  sendInfo(15773006, ":grey_exclamation: Command Info", "User has not played bedwars!")
                 }
               }
             }
@@ -429,9 +372,9 @@ bot.on("message", async message => {
   }
   else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
     // Example command [prefix]fortnite [username] [platform] [mode] [timeframe]
-    /*getFortniteData("MCG_Potato", "pc", "alltime").then(data => {
+    getFortniteData("MCG_Potato", "pc", "alltime").then(data => {
       console.log(data)
-    })*/
+    })
 
 
     if (msgArray.length === 1 || msgArray.length === 2) {
@@ -460,10 +403,7 @@ bot.on("message", async message => {
             }
             else {
               // Stats code here, print out combined stats only
-              let kd = 'k/d'
-              let win = 'win%'
-
-              let totalWins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
+              let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
               let kdr = stats.lifetimeStats['k/d'];
               let winRate = stats.lifetimeStats['win%'];
               let matches = stats.lifetimeStats.matches;
@@ -479,7 +419,7 @@ bot.on("message", async message => {
                 },
                 fields: [{
                   name: "**Total Wins**",
-                  value: totalWins + " Wins",
+                  value: wins + " Wins",
                   inline: true
                 }, {
                   name: "**KDR**",
@@ -518,13 +458,43 @@ bot.on("message", async message => {
         }
       }
       else if (msgArray.length === 4) {
-        if (msgArray.includes("SOLO") || msgArray.includes("DUOS") || msgArray.includes("DOUBLES") || msgArray.includes("SQUADS")) {
+        if (msgArray.includes("SOLO") || msgArray.includes("DUOS") ||  msgArray.includes("SQUADS")) {
           if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
             if (platform === "xbox") {
               platform = "xb1";
             }
+            let mode = msgArray[3]
             getFortniteData(username, platform.toLowerCase(), "alltime").then(stats => {
               // Stats code here, add if blocks for different modes
+              if (stats === "Player Not Found") {
+                sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
+              }
+              else if (stats === "Incorrect Platform") {
+                sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
+              }
+              else {
+                // Use a template and swap out json keys
+                let statHeader;
+                switch (mode) {
+                  case "SOLO":
+                    statHeader = stats.group.solo;
+                    break;
+                  case "DUOS":
+                    statHeader = stats.group.duo;
+                    break;
+                  case "SQUADS":
+                    statHeader = stats.group.squad;
+                    break;
+                }
+                let wins = statHeader["wins"];
+                let kdr = statHeader["k/d"];
+                let winRate = statHeader["win%"];
+                let matches = statHeader["matches"];
+                let kills = statHeader["kills"];
+                let averageKills = statHeader["killsPerMatch"];
+
+
+              }
             }).catch(err => {
               console.log(err);
             });
