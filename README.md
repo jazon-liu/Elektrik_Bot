@@ -1,4 +1,4 @@
-# MCG_Bot
+# Thicc_Bot
 ## Setup
 1. Clone from repository
   -`git clone`
