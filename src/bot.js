@@ -372,7 +372,7 @@ bot.on("message", async message => {
   }
   else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
     // Example command [prefix]fortnite [username] [platform] [mode] [timeframe]
-    getFortniteData("MCG_Potato", "pc", "alltime").then(data => {
+    getFortniteData("MCG_Potato", "pc", "weekly").then(data => {
       console.log(data)
     })
 
@@ -410,44 +410,7 @@ bot.on("message", async message => {
               let kills = stats.lifetimeStats.kills;
               let averageKills = stats.lifetimeStats.killsPerMatch;
 
-              mChannel.send({embed: {
-                color: 5119,
-                title: "**" + username + "**",
-                description: "General Alltime Stats",
-                thumbnail: {
-                  url: "https://i.imgur.com/JB90ely.jpg"
-                },
-                fields: [{
-                  name: "**Total Wins**",
-                  value: wins + " Wins",
-                  inline: true
-                }, {
-                  name: "**KDR**",
-                  value: kdr,
-                  inline: true
-                }, {
-                  name: "**Win Rate**",
-                  value: winRate + "%",
-                  inline: true
-                }, {
-                  name: "**Matches**",
-                  value: matches + " Matches",
-                  inline: true
-                }, {
-                  name: "**Kills**",
-                  value: kills + " Kills",
-                  inline: true
-                }, {
-                  name: "**Average Kills**",
-                  value: averageKills + " Kills Per Game",
-                  inline: true
-                }],
-                timestamp: new Date(),
-                footer: {
-                  text: "Made by Jason Liu"
-                }
-              }
-            });
+              sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", "Alltime", username)
           }
           }).catch(err => {
             console.log(err);
@@ -493,7 +456,9 @@ bot.on("message", async message => {
                 let kills = statHeader["kills"];
                 let averageKills = statHeader["killsPerMatch"];
 
+                mode = capitalize(mode)
 
+                sendFortnite(wins, kdr, winRate, matches, kills, averageKills, mode, "Alltime", username);
               }
             }).catch(err => {
               console.log(err);
@@ -511,8 +476,17 @@ bot.on("message", async message => {
               if (platform === "xbox") {
                 platform = "xb1";
               }
+              let tempTimeframe = capitalize(msgArray[3])
               getFortniteData(username, platform.toLowerCase(), timeframe).then(stats => {
                 // Stats code here, no specific mode
+                let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
+                let kdr = stats.lifetimeStats['k/d'];
+                let winRate = stats.lifetimeStats['win%'];
+                let matches = stats.lifetimeStats.matches;
+                let kills = stats.lifetimeStats.kills;/
+                let averageKills = stats.lifetimeStats.killsPerMatch;
+
+                sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", tempTimeframe, username);
               }).catch(err => {
                 console.log(err);
               });
@@ -521,17 +495,40 @@ bot.on("message", async message => {
               sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
             }
           }
-          else {
-            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid timeframe to get stats!")
-          }
         }
         else {
           sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter either a timeframe or a gamemode!")
         }
       }
       else if (msgArray.length === 5) {
+        let modeCheck = false;
+        let timeCheck = false;
+        let platCheck = false;
+
         let mode = msgArray[3].toUpperCase();
         let timeframe = msgArray[4].toUpperCase();
+        if (mode === "SOLO" || mode === "DUOS" || mode === "SQUADS") {
+          modeCheck = true;
+        }
+        if (timeframe === "ALLTIME" || timeframe === "SEASONS" || timeframe === "SEASONAL" || timeframe === "SEASON") {
+          timeCheck = true;
+        }
+        if (timeCheck === false || modeCheck === false) {
+          if (timeCheck === false) {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid timeframe!")
+          }
+          else if (modeCheck === false) {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid gamemode!")
+          }
+        }
+        else if (timeCheck === true && modeCheck === true) {
+          if (msgArray[3] === "SEASONAL" || msgArray[3] === "SEASON" || msgArray[3] === 'SEASONS') {
+            timeframe = "weekly"
+          else {
+            timeframe = "alltime"
+          }
+          getFortniteData(username, )
+        }
       }
     }
   }
