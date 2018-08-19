@@ -1,12 +1,14 @@
+/*jslint es6*/
+
 // Timing statistics
-console.time("Bot online")
-console.time("Files loaded")
+console.time("Bot online");
+console.time("Files loaded");
 
 // Dependencies
 const Discord = require("discord.js");
 const Hypixel = require("hypixel");
-const Fortnite = require("fortnite-api")
-const rp = require("request-promise")
+const Fortnite = require("fortnite-api");
+const rp = require("request-promise");
 const fs = require("file-system");
 const path = require("path");
 const moment = require("moment");
@@ -25,7 +27,7 @@ try {
 catch (err) {
   console.log(err.error);
 }
-console.timeEnd("Files loaded")
+console.timeEnd("Files loaded");
 
 // Create hypixel object
 const hyp = new Hypixel({key: keyFile.hypixel});
@@ -164,7 +166,7 @@ bot.on("message", async message => {
     });
   }
 
-  function sendFortnite (wins, kdr, winRate, matches, kills, averageKills, mode, timeframe) {
+  function sendFortnite (wins, kdr, winRate, matches, kills, averageKills, mode, timeframe, username) {
     message.channel.send({embed: {
       color: 5119,
       title: "**" + username + "**",
@@ -372,9 +374,11 @@ bot.on("message", async message => {
   }
   else if (cmd === "FORTNITE" || cmd === "FN" || cmd === "FTN") {
     // Example command [prefix]fortnite [username] [platform] [mode] [timeframe]
-    getFortniteData("MCG_Potato", "pc", "weekly").then(data => {
+    /*
+    getFortniteData("Twitch Big_Tater", "pc", "weekly").then(data => {
       console.log(data)
     })
+    */
 
 
     if (msgArray.length === 1 || msgArray.length === 2) {
@@ -385,8 +389,8 @@ bot.on("message", async message => {
       let platform = msgArray[2].toLowerCase();
 
       msgArray = msgArray.map(x => x.toUpperCase());
-
       if (msgArray.length === 3) {
+        
         // Default action
         console.log("No other parameters given, defaulting to combined stats...".green)
 
@@ -394,6 +398,7 @@ bot.on("message", async message => {
           if (platform === "xbox") {
             platform = "xb1";
           }
+          
           getFortniteData(username, platform, "alltime").then(stats => {
             if (stats === "Player Not Found") {
               sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
@@ -406,9 +411,9 @@ bot.on("message", async message => {
               let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
               let kdr = stats.lifetimeStats['k/d'];
               let winRate = stats.lifetimeStats['win%'];
-              let matches = stats.lifetimeStats.matches;
-              let kills = stats.lifetimeStats.kills;
-              let averageKills = stats.lifetimeStats.killsPerMatch;
+              let matches = stats.lifetimeStats["matches"];
+              let kills = stats.lifetimeStats["kills"];
+              let averageKills = stats.lifetimeStats["killsPerMatch"];
 
               sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", "Alltime", username)
           }
@@ -483,7 +488,7 @@ bot.on("message", async message => {
                 let kdr = stats.lifetimeStats['k/d'];
                 let winRate = stats.lifetimeStats['win%'];
                 let matches = stats.lifetimeStats.matches;
-                let kills = stats.lifetimeStats.kills;/
+                let kills = stats.lifetimeStats.kills;
                 let averageKills = stats.lifetimeStats.killsPerMatch;
 
                 sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", tempTimeframe, username);
@@ -507,27 +512,50 @@ bot.on("message", async message => {
 
         let mode = msgArray[3].toUpperCase();
         let timeframe = msgArray[4].toUpperCase();
+
         if (mode === "SOLO" || mode === "DUOS" || mode === "SQUADS") {
           modeCheck = true;
         }
         if (timeframe === "ALLTIME" || timeframe === "SEASONS" || timeframe === "SEASONAL" || timeframe === "SEASON") {
           timeCheck = true;
         }
-        if (timeCheck === false || modeCheck === false) {
+        if (platform === "pc" || platform === "ps4" || platform === "xbox" || platform === "xb1") {
+          platCheck = true;
+        }
+
+        if (timeCheck === false || modeCheck === false || platCheck === false) {
           if (timeCheck === false) {
             sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid timeframe!")
           }
           else if (modeCheck === false) {
             sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid gamemode!")
           }
+          else if (platCheck === false) {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid platform!")
+          }
         }
         else if (timeCheck === true && modeCheck === true) {
           if (msgArray[3] === "SEASONAL" || msgArray[3] === "SEASON" || msgArray[3] === 'SEASONS') {
-            timeframe = "weekly"
-          else {
-            timeframe = "alltime"
+            timeframe = "weekly";
           }
-          getFortniteData(username, )
+          else {
+            timeframe = "alltime";
+          }
+          if (platform === "xbox") {
+            platform = "xb1";
+          }
+
+          getFortniteData(username, platform, timeframe).then(stats => {
+            if (stats === "Player Not Found") {
+              sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
+            }
+            else if (stats === "Incorrect Platform") {
+              sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
+            }
+            else {
+              
+            }
+          });
         }
       }
     }

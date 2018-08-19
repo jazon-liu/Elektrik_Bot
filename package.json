@@ -23,6 +23,7 @@
     "file-system": "^2.2.2",
     "fortnite-api": "^2.12.2",
     "hypixel": "^1.0.3",
+    "jslint": "^0.12.0",
     "moment": "^2.22.2",
     "npm": "^6.2.0",
     "path": "^0.12.7",
