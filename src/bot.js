@@ -283,7 +283,8 @@ bot.on("message", async message => {
       // No bueno
     }
     else if (msgArray[1].toUpperCase() === "MINECRAFT" || msgArray[1].toUpperCase() === "MC") {
-      const serverChild = spawn('node', ['server.js'], {
+      console.log("Server spawned".yellow)
+      const serverChild = spawn('node server.js', {
         detached: true
       });
       serverChild.unref();
