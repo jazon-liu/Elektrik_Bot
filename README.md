@@ -1,4 +1,4 @@
-# Thicc_Bot
+# Elektrik_Bot
 ## Setup
 1. Clone from repository
   -`git clone`
