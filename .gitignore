@@ -64,3 +64,5 @@ typings/
 config/config.json
 config/token.json
 config/keys.json
+minecraft/
+data/

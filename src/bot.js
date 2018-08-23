@@ -1,4 +1,4 @@
-/*jslint es6*/
+/*jslint esversion: 6*/
 
 // Timing statistics
 console.time("Bot online");
@@ -8,6 +8,8 @@ console.time("Files loaded");
 const Discord = require("discord.js");
 const Hypixel = require("hypixel");
 const Fortnite = require("fortnite-api");
+const owjs = require("overwatch-js");
+const { spawn } = require("child_process");
 const rp = require("request-promise");
 const fs = require("file-system");
 const path = require("path");
@@ -47,6 +49,7 @@ let fortniteAPI = new Fortnite(
 
 bot.on("ready", async () => {
   console.timeEnd("Bot online")
+  console.log("Rainbows".rainbow);
   bot.user.setActivity("v" + configFile.version + " || " + configFile.prefix + "help");
 });
 
@@ -91,8 +94,11 @@ bot.on("message", async message => {
     });
   }
 
+  
+
   // Send info for Hypixel data
   function sendHypixel (gamesPlayed, winRate, kills, kdr, finalKills, voidKills, bedsBroken, bedsLost, iron, gold, diamond, emerald, teamSize, name) {
+    console.log(("Sent hypixel data for " + name + "!").cyan)
     message.channel.send({embed: {
         color: 5119,
         title: ("Hypixel's BedWars Stats: " + teamSize),
@@ -167,6 +173,7 @@ bot.on("message", async message => {
   }
 
   function sendFortnite (wins, kdr, winRate, matches, kills, averageKills, mode, timeframe, username) {
+    console.log(("Sent fortnite data for " + username + "!").cyan)
     message.channel.send({embed: {
       color: 5119,
       title: "**" + username + "**",
@@ -270,6 +277,17 @@ bot.on("message", async message => {
         }
       }
     });
+  }
+  else if (cmd === "SERVER") {
+    if (msgArray.length === 1) {
+      // No bueno
+    }
+    else if (msgArray[1].toUpperCase() === "MINECRAFT" || msgArray[1].toUpperCase() === "MC") {
+      const serverChild = spawn('node', ['server.js'], {
+        detached: true
+      });
+      serverChild.unref();
+    }
   }
   else if (cmd === "HYPIXEL") {
     if (msgArray.length === 1 || msgArray.length === 2 ) {
@@ -380,185 +398,222 @@ bot.on("message", async message => {
     })
     */
 
+    if (msgArray.length === 1) {
+      // Code for checking if account is linked
+      let authorId = message.author.id;
+      let linkData = JSON.parse(fs.readFileSync(path.join(__dirname, "/../data/fortnite-link.json")));
+      /*
+      console.log(linkData.players)
+      let x = linkData["players"].filter(u => u.id == "170144638017994752");
+      console.log(x)
+      */
+      let playerIndex;
 
-    if (msgArray.length === 1 || msgArray.length === 2) {
-      sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure you have entered all parameters! See the help page for more details")
+      for (let i = 0; i < linkData.players.length; i++) {
+        let currentId = Object.keys(linkData.players[i]);
+        currentId = currentId.join("");
+        if (currentId === authorId) {
+          playerIndex = i;
+          break;
+        }
+        else {
+          playerIndex = -1;
+          continue;
+        }
+      }
+      if (playerIndex === -1) {
+        sendInfo(15773006, ":grey_exclamation: Command Info", "Your account hasn't been linked! Link it with " + prefix + "ftn link [platform] [username]")
+      }
+      else {
+        let fortniteUsername = linkData.players[playerIndex][authorId].username;
+        let platform = linkData.players[playerIndex][authorId].platform;
+        getFortniteData(fortniteUsername, platform, "alltime").then(stats => {
+          if (stats === "Player Not Found") {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling and retry!")
+          }
+          else if (stats === "Incorrect Platform") {
+            sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on this platform! Please relink your account with the correct platform!")
+          }
+          else {
+            let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
+            let kdr = stats.lifetimeStats["k/d"];
+            let winRate = stats.lifetimeStats["win%"];
+            let matches = stats.lifetimeStats["matches"];
+            let kills = stats.lifetimeStats["kills"];
+            let averageKills = stats.lifetimeStats["killsPerMatch"];
+
+            sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", "Alltime", fortniteUsername);
+          }
+        });
+      }
     }
-    else {
-      let username = msgArray[1];
-      let platform = msgArray[2].toLowerCase();
+    else if (msgArray[1].toUpperCase() === "LINK") {
+      // Code for account linking
+      // Write to JSON file
+      if (msgArray.length < 4) {
+        sendInfo(15773006, ":grey_exclamation: Command Info", "Make sure to enter all parameters! " + prefix + "ftn link [platform] [username]")
+      }
+      else {
+        let playerIndex;
 
-      msgArray = msgArray.map(x => x.toUpperCase());
-      if (msgArray.length === 3) {
-        
-        // Default action
-        console.log("No other parameters given, defaulting to combined stats...".green)
+        let authorId = message.author.id;
+        let platform = msgArray[2];
+        let username = msgArray.slice(3, msgArray.length);
+        username = username.join(" ")
+        let linkData = JSON.parse(fs.readFileSync(path.join(__dirname, "/../data/fortnite-link.json")));
+          
+        // Check if player is in linked json file
+        for (let i = 0; i < linkData.players.length; i++) {
+          let currentId = Object.keys(linkData.players[i]);
+          currentId = currentId.join("");
+          if (currentId === authorId) {
+            playerIndex = i;
+            break;
+          }
+          else {
+            playerIndex = -1;
+            continue;
+          }
+        }
+          
+        if (playerIndex === -1) {
+          // Write to json
 
-        if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
-          if (platform === "xbox") {
-            platform = "xb1";
+          let jsonData = {
+            [authorId]: {
+              "id": authorId,
+              "username": username,
+              "platform": platform
+            }
           }
           
-          getFortniteData(username, platform, "alltime").then(stats => {
-            if (stats === "Player Not Found") {
-              sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
-            }
-            else if (stats === "Incorrect Platform") {
-              sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
-            }
-            else {
-              // Stats code here, print out combined stats only
-              let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
-              let kdr = stats.lifetimeStats['k/d'];
-              let winRate = stats.lifetimeStats['win%'];
-              let matches = stats.lifetimeStats["matches"];
-              let kills = stats.lifetimeStats["kills"];
-              let averageKills = stats.lifetimeStats["killsPerMatch"];
+          linkData["players"].push(jsonData);
+          linkData = JSON.stringify(linkData);
 
-              sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", "Alltime", username)
-          }
-          }).catch(err => {
-            console.log(err);
-          });
-        }
-        else {
-          sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
-        }
-      }
-      else if (msgArray.length === 4) {
-        if (msgArray.includes("SOLO") || msgArray.includes("DUOS") ||  msgArray.includes("SQUADS")) {
-          if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
-            if (platform === "xbox") {
-              platform = "xb1";
-            }
-            let mode = msgArray[3]
-            getFortniteData(username, platform.toLowerCase(), "alltime").then(stats => {
-              // Stats code here, add if blocks for different modes
-              if (stats === "Player Not Found") {
-                sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
-              }
-              else if (stats === "Incorrect Platform") {
-                sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
-              }
-              else {
-                // Use a template and swap out json keys
-                let statHeader;
-                switch (mode) {
-                  case "SOLO":
-                    statHeader = stats.group.solo;
-                    break;
-                  case "DUOS":
-                    statHeader = stats.group.duo;
-                    break;
-                  case "SQUADS":
-                    statHeader = stats.group.squad;
-                    break;
-                }
-                let wins = statHeader["wins"];
-                let kdr = statHeader["k/d"];
-                let winRate = statHeader["win%"];
-                let matches = statHeader["matches"];
-                let kills = statHeader["kills"];
-                let averageKills = statHeader["killsPerMatch"];
-
-                mode = capitalize(mode)
-
-                sendFortnite(wins, kdr, winRate, matches, kills, averageKills, mode, "Alltime", username);
-              }
-            }).catch(err => {
+          fs.writeFile(path.join(__dirname, "/../data/fortnite-link.json"), linkData, function (err) {
+            if (err) {
               console.log(err);
-            });
-          }
-          else {
-            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
-          }
-        }
-        else if (msgArray.includes("ALLTIME") || msgArray.includes("SEASONS") || msgArray.includes("SEASONAL") || msgArray.includes("SEASON")) {
-          let timeframe = msgArray[3].toLowerCase(); // Only in this case
-          if (msgArray[3] === "SEASONAL" || msgArray[3] === "SEASON" || msgArray[3] === 'SEASONS') {
-            timeframe = "weekly"
-            if (platform === "pc" || platform === "ps4" || platform === "xb1" || platform === "xbox") {
-              if (platform === "xbox") {
-                platform = "xb1";
-              }
-              let tempTimeframe = capitalize(msgArray[3])
-              getFortniteData(username, platform.toLowerCase(), timeframe).then(stats => {
-                // Stats code here, no specific mode
-                let wins = stats.group.solo.wins + stats.group.duo.wins + stats.group.squad.wins;
-                let kdr = stats.lifetimeStats['k/d'];
-                let winRate = stats.lifetimeStats['win%'];
-                let matches = stats.lifetimeStats.matches;
-                let kills = stats.lifetimeStats.kills;
-                let averageKills = stats.lifetimeStats.killsPerMatch;
+            }
+            console.log("File saved!".yellow)
+          });
 
-                sendFortnite(wins, kdr, winRate, matches, kills, averageKills, "General", tempTimeframe, username);
-              }).catch(err => {
-                console.log(err);
-              });
-            }
-            else {
-              sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter the platform your username is for!")
-            }
-          }
+          sendInfo(6076508, ":grey_exclamation: Command Info", "Account linked to " + username + "!")
         }
         else {
-          sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter either a timeframe or a gamemode!")
-        }
-      }
-      else if (msgArray.length === 5) {
-        let modeCheck = false;
-        let timeCheck = false;
-        let platCheck = false;
-
-        let mode = msgArray[3].toUpperCase();
-        let timeframe = msgArray[4].toUpperCase();
-
-        if (mode === "SOLO" || mode === "DUOS" || mode === "SQUADS") {
-          modeCheck = true;
-        }
-        if (timeframe === "ALLTIME" || timeframe === "SEASONS" || timeframe === "SEASONAL" || timeframe === "SEASON") {
-          timeCheck = true;
-        }
-        if (platform === "pc" || platform === "ps4" || platform === "xbox" || platform === "xb1") {
-          platCheck = true;
-        }
-
-        if (timeCheck === false || modeCheck === false || platCheck === false) {
-          if (timeCheck === false) {
-            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid timeframe!")
-          }
-          else if (modeCheck === false) {
-            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid gamemode!")
-          }
-          else if (platCheck === false) {
-            sendInfo(15773006, ":grey_exclamation: Command Info", "Please enter a valid platform!")
-          }
-        }
-        else if (timeCheck === true && modeCheck === true) {
-          if (msgArray[3] === "SEASONAL" || msgArray[3] === "SEASON" || msgArray[3] === 'SEASONS') {
-            timeframe = "weekly";
-          }
-          else {
-            timeframe = "alltime";
-          }
-          if (platform === "xbox") {
-            platform = "xb1";
-          }
-
-          getFortniteData(username, platform, timeframe).then(stats => {
-            if (stats === "Player Not Found") {
-              sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
-            }
-            else if (stats === "Incorrect Platform") {
-              sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
-            }
-            else {
-              
-            }
-          });
+          sendInfo(15773006, ":grey_exclamation: Command Info", "Your account is already linked! Unlink with " + prefix + "ftn unlink!")
         }
       }
     }
+    else if (msgArray[1].toUpperCase() === "UNLINK") {
+      let playerIndex;
+
+      let authorId = message.author.id;
+      let linkData = JSON.parse(fs.readFileSync(path.join(__dirname, "/../data/fortnite-link.json")));
+      let ids = [];
+
+      for (let i = 0; i < linkData.players.length; i++) {
+        let currentId = Object.keys(linkData.players[i]);
+        ids.push(currentId);
+      }
+
+      for (let i = 0; i < linkData.players.length; i++) {
+        let currentId = Object.keys(linkData.players[i]);
+        currentId = currentId.join("");
+        if (currentId === authorId) {
+          playerIndex = i;
+          break;
+        }
+        else {
+          playerIndex = -1;
+          continue;
+        }
+      }
+      let username = linkData.players[playerIndex][authorId]["username"];
+
+      if (playerIndex === -1) {
+        sendInfo(15773006, ":grey_exclamation: Command Info", "Your account hasn't been linked! Link it with " + prefix + "ftn link [platform] [username]")
+      }
+      else {
+        linkData.players.splice(playerIndex, 1);
+        sendInfo(6076508, ":grey_exclamation: Command Info", "Unlinking " + username + "!")
+        // Make sure to push to file afterwards
+        linkData = JSON.stringify(linkData);
+
+        fs.writeFile(path.join(__dirname, "/../data/fortnite-link.json"), linkData, function (err) {
+          if (err) {
+            console.log(err);
+          }
+          console.log("File saved!")
+        });
+      }
+    }
+    else if (msgArray[1].toUpperCase().includes("SOLO") || msgArray[1].toUpperCase().includes("DUO") || msgArray[1].toUpperCase().includes("SQUAD")) {
+      let linkData = JSON.parse(fs.readFileSync(path.join(__dirname, "/../data/fortnite-link.json")));
+      let authorId = message.author.id;
+      let mode = msgArray[1].toUpperCase();
+
+      for (let i = 0; i < linkData.players.length; i++) {
+        let currentId = Object.keys(linkData.players[i]);
+        currentId = currentId.join("");
+        if (currentId === authorId) {
+          playerIndex = i;
+          break;
+        }
+        else {
+          playerIndex = -1;
+          continue;
+        }
+      }
+
+      let username = linkData.players[playerIndex][authorId]["username"];
+      let platform = linkData.players[playerIndex][authorId]["platform"];
+
+      getFortniteData(username, platform, "alltime").then(stats => {
+        if (stats === "Player Not Found") {
+          sendInfo(15773006, ":grey_exclamation: Command Info", "This player doesn't exist! Please check your spelling!")
+        }
+        else if (stats === "Incorrect Platform") {
+          sendInfo(15773006, ":grey_exclamation: Command Info", "Player not found on given platform!")
+        }
+        else {
+          if (mode === "SOLO" || mode === "SOLOS") {
+            mode = "SOLO";
+          }
+          else if (mode === "DUO" || mode === "DUOS") {
+            mode = "DUOS";
+          }
+          else if (mode === "SQUAD" || mode === "SQUADS") {
+            mode = "SQUADS";
+          }
+
+          let statHeader;
+          switch (mode) {
+            case "SOLO":
+              statHeader = stats.group.solo;
+              break;
+            case "DUOS":
+              statHeader = stats.group.duo;
+              break;
+            case "SQUADS":
+              statHeader = stats.group.squad;
+              break;
+          }
+          let wins = statHeader["wins"];
+          let kdr = statHeader["k/d"];
+          let winRate = statHeader["win%"];
+          let matches = statHeader["matches"];
+          let kills = statHeader["kills"];
+          let averageKills = statHeader["killsPerMatch"];
+
+          mode = capitalize(mode)
+
+          sendFortnite(wins, kdr, winRate, matches, kills, averageKills, mode, "Alltime", username);
+        }
+      });
+    }
+  }
+  else if (cmd === "OVERWATCH" || cmd === "OW") {
+    // Overwatch Code
   }
 });
 bot.login(tokenFile.token);

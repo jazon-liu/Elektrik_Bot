@@ -25,10 +25,13 @@
     "hypixel": "^1.0.3",
     "jslint": "^0.12.0",
     "moment": "^2.22.2",
-    "npm": "^6.2.0",
+    "npm": "^6.4.0",
+    "overwatch-js": "^1.8.0",
     "path": "^0.12.7",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
+    "scriptserver": "^1.1.0",
+    "scriptserver-essentials": "^1.0.0",
     "uws": "^10.148.1",
     "winston": "^3.0.0"
   }
